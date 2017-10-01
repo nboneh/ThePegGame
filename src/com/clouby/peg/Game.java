@@ -7,8 +7,8 @@ import java.awt.FontMetrics;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -25,11 +25,16 @@ public class Game extends Applet implements MouseListener, MouseMotionListener {
 	private Button playButton;
 	private Button playAgainButton;
 
+	private Image offScreenBuffer = null;
+
 
 	//Designing the game based around these pixel dimensions
 	//game will look best when window has 16:9 ratio but can work in other sizes
-	float width = 960;
-	float height = 540;
+	int width = 960;
+	int height = 540;
+
+	private float widthScreenRatio;
+	private float  heightScreenRatio;
 
 	//Button playButton;
 	public void init(){
@@ -40,17 +45,37 @@ public class Game extends Applet implements MouseListener, MouseMotionListener {
 		state = GameState.MAIN_MENU;
 		setSize((int)width, (int)height);
 
+		int rows = 5;
+		if(this.getParameter("rows") != null)
+			rows = Integer.parseInt(this.getParameter("rows"));
+
+
+		board = new Board((int)(width * .1f), (int)(height * .1f), (int)(width * .8f), (int)(height * .8f), rows);
+
 		playButton = new Button( 40,  "Start Game", Color.white, getGraphics());
-		playButton.setXAndY((width - playButton.getWidth())/2, height * .8f);
+		playButton.setXAndY((int)((width - playButton.getWidth())/2), (int)(height * .8f));
 
 		playAgainButton = new Button( 40,  "Play Again", Color.white, getGraphics());
-		playAgainButton.setXAndY((width - playButton.getWidth())/2, height * .8f);
+		playAgainButton.setXAndY((int)((width - playButton.getWidth())/2), (int)(height * .8f));
 	}
 
 
 	public void paint(Graphics g) { 
 		//Scaling to fit window size
-		((Graphics2D) g).scale(this.getWidth()/width, this.getHeight()/height);
+		widthScreenRatio = this.getWidth()/(float)width;
+		heightScreenRatio = this.getHeight()/(float)height;
+
+		((Graphics2D) g).scale(widthScreenRatio,heightScreenRatio);
+
+		//Adding antialising for smoothness
+		((Graphics2D) g).setRenderingHint(
+				RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_ON);
+
+		((Graphics2D) g).setRenderingHint(
+				RenderingHints.KEY_TEXT_ANTIALIASING,
+				RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
 		g.setColor(Color.BLACK);
 		g.fillRect(0, 0, (int)width, (int)height);
 		switch(state){
@@ -59,7 +84,7 @@ public class Game extends Applet implements MouseListener, MouseMotionListener {
 			playButton.paint(g);
 			break;
 		case PLAYING:
-			drawATitle("YAYA", Color.WHITE, g);
+			board.paint(g);
 			break;
 		case WIN:
 			drawATitle("You Win!", Color.GREEN, g);
@@ -71,11 +96,23 @@ public class Game extends Applet implements MouseListener, MouseMotionListener {
 			break;
 		default:
 			break;
-		}
+		} 
 	}
-	
-	public void update(Graphics g) { 
-		paint(g);
+
+	public void update(Graphics g)
+	{
+		//Using double buffer to prevent flickering
+		//This is rather simplistic double buffering it does not work on window resize
+		Graphics gr;
+		if (offScreenBuffer==null ||
+				(! (offScreenBuffer.getWidth(this) == this.getWidth()
+				&& offScreenBuffer.getHeight(this) == this.getHeight())))
+		{
+			offScreenBuffer = this.createImage(this.getWidth(), this.getHeight());
+		}
+		gr = offScreenBuffer.getGraphics();
+		paint(gr); 
+		g.drawImage(offScreenBuffer, 0, 0, this);     
 	}
 
 	private void drawATitle(String title,Color c, Graphics g ){
@@ -94,16 +131,16 @@ public class Game extends Applet implements MouseListener, MouseMotionListener {
 	public void mouseDragged(MouseEvent e) {
 		//Track mouse movement even if held down or not held down
 		mouseMoved(e);
-		
+
 	}
 
 	@Override
 	public void mouseMoved(MouseEvent e) {
 		if(state == GameState.PLAYING)
 			return;
-		float x = e.getX() * (width/this.getWidth());
-		float y = e.getY()* (height/this.getHeight());
-		
+		int x = (int) (e.getX() / widthScreenRatio);
+		int y = (int) (e.getY()/ heightScreenRatio);
+
 		Button b = playAgainButton;
 		if(state == GameState.MAIN_MENU)
 			b = playButton;
@@ -116,22 +153,12 @@ public class Game extends Applet implements MouseListener, MouseMotionListener {
 			b.setIsPressed(false);
 			repaint();
 		}
-		
+
 		e.consume();
 	}
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		
-		if(state != GameState.PLAYING)
-			return;
-		
-		float x = e.getX() * (width/this.getWidth());
-		float y = e.getY()* (height/this.getHeight());
-		
-		
-		
-		e.consume();
 	}
 
 
@@ -149,10 +176,10 @@ public class Game extends Applet implements MouseListener, MouseMotionListener {
 	public void mousePressed(MouseEvent e) {
 		if(state == GameState.PLAYING)
 			return;
-		
-		float x = e.getX() * (width/this.getWidth());
-		float y = e.getY()* (height/this.getHeight());
-		
+
+		int x = (int) (e.getX() / widthScreenRatio);
+		int y = (int) (e.getY()/ heightScreenRatio);
+
 		Button b = playAgainButton;
 		if(state == GameState.MAIN_MENU)
 			b = playButton;
@@ -164,27 +191,35 @@ public class Game extends Applet implements MouseListener, MouseMotionListener {
 			b.setIsPressed(false);
 			repaint();
 		}
-		
+
 		e.consume();
 	}
 
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		if(state == GameState.PLAYING)
+		int x = (int) (e.getX() / widthScreenRatio);
+		int y = (int) (e.getY()/ heightScreenRatio);
+
+		if(state == GameState.PLAYING){
+			board.detect(x, y);
+
+			repaint();
+
+			e.consume();
 			return;
-		float x = e.getX() * (width/this.getWidth());
-		float y = e.getY()* (height/this.getHeight());
-		
+		}
+
 		Button b = playAgainButton;
 		if(state == GameState.MAIN_MENU)
 			b = playButton;
 
 		if(b.isInBound(x, y) && b.isPressed()){
 			state = GameState.PLAYING;
+			board.setup();
 			this.repaint();
 		}
-		
+
 		e.consume();
 	}
 

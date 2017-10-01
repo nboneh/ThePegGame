@@ -1,10 +1,10 @@
-package com.clouby.peg;
+package com.clouby.peg.util;
 
 public class SquareBoundDetect implements BoundDetect {
 	
-	private float left, right, top, bot;
+	private int left, right, top, bot;
 	
-	public SquareBoundDetect(float width, float height, float x, float y){
+	public SquareBoundDetect(int width, int height, int x, int y){
 		left = x;
 		right = x + width;
 		top = y;
@@ -12,7 +12,7 @@ public class SquareBoundDetect implements BoundDetect {
 	}
 
 	@Override
-	public boolean isInBound(float x, float y){
+	public boolean isInBound(int x, int y){
 		return x >= left && x <= right && y >= top && y <= bot;
 	}
 }

@@ -7,14 +7,17 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 
+import com.clouby.peg.util.BoundDetect;
+import com.clouby.peg.util.SquareBoundDetect;
+
 public class Button {
 	private int fontSize;
 	private Color c;
 	private Color darkC;
 	private String title;
 
-	private float width, height;
-	private float x, y;
+	private int width, height;
+	private int x, y;
 	private BoundDetect detect;
 
 	private boolean hovered;
@@ -31,7 +34,7 @@ public class Button {
 		calcWidthAndHeight(g);
 	}
 
-	public void setXAndY(float x, float y){
+	public void setXAndY(int x, int y){
 		this.x = x;
 		this.y = y;
 		detect = new SquareBoundDetect(width, height,x, y);
@@ -45,7 +48,7 @@ public class Button {
 		return height;
 	}
 
-	public boolean isInBound(float x, float y){
+	public boolean isInBound(int x, int y){
 		return detect.isInBound(x, y);
 	}
 
@@ -92,8 +95,8 @@ public class Button {
 		g2d.setFont(new Font("TimesRoman", Font.PLAIN, fontSize)); 
 		FontMetrics fm = g2d.getFontMetrics();
 		Rectangle2D r = fm.getStringBounds(title, g2d);
-		width = (float) r.getWidth();
-		height = (float) fm.getAscent() - fm.getDescent();
+		width =  (int) r.getWidth();
+		height = fm.getAscent() - fm.getDescent();
 	}
 
 }
