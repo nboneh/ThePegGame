@@ -4,7 +4,6 @@ import java.applet.Applet;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -13,6 +12,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
+
 
 
 public class Game extends Applet implements MouseListener, MouseMotionListener {     
@@ -35,19 +35,23 @@ public class Game extends Applet implements MouseListener, MouseMotionListener {
 
 	private float widthScreenRatio;
 	private float  heightScreenRatio;
+	
+	private int rows;
+	
 
-	//Button playButton;
+	public Game(int rows){
+		this.rows = rows;
+	}
+
 	public void init(){
-		Frame c = (Frame)this.getParent().getParent();
-		c.setTitle("Peg Game");
+		//Frame c = (Frame)this.getParent();
+		//c.setTitle("Peg Game");
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		state = GameState.MAIN_MENU;
 		setSize((int)width, (int)height);
-
-		int rows = 5;
-		if(this.getParameter("rows") != null)
-			rows = Integer.parseInt(this.getParameter("rows"));
+		//if(this.getParameter("rows") != null)
+		//	rows = Integer.parseInt(this.getParameter("rows"));
 
 
 		board = new Board((int)(width * .1f), (int)(height * .1f), (int)(width * .8f), (int)(height * .8f), rows);
