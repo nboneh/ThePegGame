@@ -38,6 +38,13 @@ public class Hole {
 		this.c = c;
 		hasPeg = true;
 	}
+	
+	public Color getPegColor(){
+		if(hasPeg)
+			return c;
+		else 
+			return null;
+	}
 
 	public void setHighlight(boolean highlight){
 		this.highlight = highlight;

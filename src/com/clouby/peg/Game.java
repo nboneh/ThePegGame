@@ -202,10 +202,15 @@ public class Game extends Applet implements MouseListener, MouseMotionListener {
 		int y = (int) (e.getY()/ heightScreenRatio);
 
 		if(state == GameState.PLAYING){
-			board.detect(x, y);
-
+			if(board.detect(x, y)){
+				//If move has been made check for win or lost
+				if(board.won()){
+					state = GameState.WIN;
+				} else if(board.lost()){
+					state = GameState.LOSE;
+				}
+			}
 			repaint();
-
 			e.consume();
 			return;
 		}
